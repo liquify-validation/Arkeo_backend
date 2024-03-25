@@ -59,12 +59,16 @@ ServiceReverseLookup = {
     50: "doge-mainnet-blockbook"
 }
 
-@main_bp.route('/')
-def index():
-    return jsonify({'message': 'Welcome to the API!'})
-
-@main_bp.route('/providers')
+@main_bp.route('/arkeo/api/providers')
 def providers():
+    """Grab a json of all providers on the arkeo network
+           ---
+           tags:
+             - General
+           responses:
+             200:
+               description: A json of all provider on the network
+           """
     db = (grabQuery('SELECT * FROM Arkeo.providers'))
 
     dict_of_dicts = {}
@@ -74,8 +78,16 @@ def providers():
 
     return dict_of_dicts
 
-@main_bp.route('/get-providers')
+@main_bp.route('/arkeo/api/get-providers')
 def get_providers():
+    """Grab a list of provider names
+       ---
+       tags:
+         - General
+       responses:
+         200:
+           description: list of provider names
+       """
     db = (grabQuery('SELECT provider_name FROM Arkeo.providers'))
 
     providerData = []
@@ -85,8 +97,16 @@ def get_providers():
 
     return providerData
 
-@main_bp.route('/chains')
+@main_bp.route('/arkeo/api/chains')
 def get_chains():
+    """Grab a breakdown of chains and how many hosted providers there are for that chain
+       ---
+       tags:
+         - General
+       responses:
+         200:
+           description: the breakdown of chains
+       """
     db = (grabQuery('SELECT * FROM Arkeo.providers'))
 
     chains = []
@@ -103,3 +123,25 @@ def get_chains():
     sorted_dict = OrderedDict((key, {"count": value, "name": ServiceReverseLookup[key]}) for key, value in sorted_counts)
 
     return sorted_dict
+
+@main_bp.route('/arkeo/api/locations')
+def get_location():
+    """Grab the hosted country of all Arkeo node providers
+       ---
+       tags:
+         - General
+       responses:
+         200:
+           description: the breakdown of node locations on the network
+       """
+    data = grabQuery('SELECT * FROM Arkeo.providers')
+
+    output = {}
+    for key in data:
+        if key["isp_country"] != '':
+            if key["isp_country"] not in output:
+                output[key["isp_country"]] = 1
+            else:
+                output[key["isp_country"]] += 1
+
+    return jsonify(output)

@@ -5,6 +5,9 @@ from config import Config
 from database.db_common import *
 from requests.exceptions import Timeout
 import tldextract
+import socket
+import ipaddress
+import time
 
 ServiceReverseLookup = {
     0: "unknown",
@@ -60,6 +63,31 @@ ServiceReverseLookup = {
     50: "doge-mainnet-blockbook"
 }
 
+def strip_port_from_url(url):
+    parts = url.split(':')
+    if len(parts) > 1 and parts[-1].isdigit():
+        # If there are more than two parts and the last part is a number (port number)
+        return ':'.join(parts[:-1])
+    else:
+        # Otherwise, return the original URL
+        return url
+
+def get_ip_address(address):
+    address = address.split("/")[0]
+    address = strip_port_from_url(address)
+    try:
+        # Check if the input is an IP address
+        ip = ipaddress.ip_address(address)
+        return str(ip)
+
+    except ValueError:
+        try:
+            # Attempt DNS resolution if it's not an IP address
+            ip_address = socket.gethostbyname(address)
+            return ip_address
+        except socket.error as e:
+            print(f"Error: {e}")
+            return None
 
 def make_query(type, path):
     base_paths = {
@@ -93,11 +121,35 @@ def grab_provider(provider):
         return None
     base_url = provider[0]["metadata_uri"][:provider[0]["metadata_uri"].rfind('/')]
 
+    ip_addr = get_ip_address(base_url.replace("https://", "").replace("http://", ""))
+
+
+
     dict_of_dicts = {}
 
     for d in provider:
         service_string = base_url + "/" + ServiceReverseLookup[d["service"]]
         dict_of_dicts[service_string] = d
+
+    ip_dict = {}
+
+    response_code = 0
+    if ip_addr != None:
+        while response_code != 200:
+            response = requests.get("http://ip-api.com/json/" + ip_addr)
+            response_code = response.status_code
+            if response_code == 429:
+                print("rate limited wait 60seconds")
+                time.sleep(60)
+            elif response_code == 200:
+                ip_data = json.loads(response.text)
+                ip_dict = ip_data
+    else:
+        ip_dict['city'] = "UNKNOWN"
+        ip_dict['isp'] = "UNKNOWN"
+        ip_dict['country'] = "UNKNOWN"
+        ip_dict['countryCode'] = "UNKNOWN"
+        ip_dict['query'] = "UNKNOWN"
 
     provider_data = {
         provider_name: {
@@ -111,7 +163,8 @@ def grab_provider(provider):
             "contracts": {},
             "number_of_services": len(provider),
             "services": [endpoint['service'] for endpoint in provider],
-            "offline_reason": "N/A"
+            "offline_reason": "N/A",
+            "isp": ip_dict
         }
     }
 
@@ -134,9 +187,9 @@ def grab_provider(provider):
 
     query = "INSERT INTO Arkeo.providers (provider_name, meta_data_accessible, description, website, " \
             "location, free_tier_rate_limit, provider_pubkey, endpoints, contracts,number_of_services, " \
-            "services, offline_reason) VALUES ('{provider_name}', '{meta_data_accessible}','{description}','{website}'," \
+            "services, offline_reason, isp, isp_country, ip_addr) VALUES ('{provider_name}', '{meta_data_accessible}','{description}','{website}'," \
             "'{location}','{free_tier_rate_limit}','{provider_pubkey}','{endpoints}','{contracts}'," \
-            "'{number_of_services}','{services}', '{offline_reason}')".format(provider_name=provider_name,
+            "'{number_of_services}','{services}', '{offline_reason}','{isp}','{isp_country}', '{ip_addr}')".format(provider_name=provider_name,
                                                                               meta_data_accessible=
                                                                               provider_data[provider_name][
                                                                                   "meta_data_accessible"],
@@ -165,7 +218,10 @@ def grab_provider(provider):
                                                                                   "services"],
                                                                               offline_reason=
                                                                               provider_data[provider_name][
-                                                                                  "offline_reason"])
+                                                                                  "offline_reason"],
+                                                                              isp=provider_data[provider_name]['isp']['isp'],
+                                                                              isp_country=provider_data[provider_name]['isp']['country'],
+                                                                              ip_addr=provider_data[provider_name]['isp']['query'])
     commitQuery(query)
 
     return provider_data
