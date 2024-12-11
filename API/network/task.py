@@ -1,46 +1,8 @@
-from API.network.models import Network, Nonce
+from API.network.models import Network
 from API.providers.models import Provider
 from DB import db
 from common.common import *
 from flask import Flask
-
-def grab_nonce_counter(app: Flask):
-    with app.app_context():
-        status = make_query("api", "/cosmos/base/node/v1beta1/status")
-        height = int(status["height"])
-        timestamp = convert_to_mysql_timestamp(status["timestamp"])
-
-        contracts = make_query("api", "/arkeo/contracts")['contract']
-        nonceTotal = 0
-
-        for contract_data in contracts:
-            nonce = int(contract_data['nonce']) if contract_data['nonce'] else 0
-            nonceTotal += nonce
-
-        existing_nonce = Nonce.query.get(height)
-
-        if existing_nonce:
-            # Update existing nonce entry
-            existing_nonce.nonceCount = nonceTotal
-            existing_nonce.timestamp = timestamp  # Update timestamp
-        else:
-            # Create a new nonce entry
-            new_nonce = Nonce(
-                blockHeight=height,
-                nonceCount=nonceTotal,
-                timestamp=timestamp
-            )
-            db.session.add(new_nonce)
-
-        # Commit the changes
-        try:
-            db.session.commit()
-            print("Network stats successfully updated.")
-        except Exception as e:
-            db.session.rollback()
-            print(f"Failed to update network stats: {e}")
-
-
 
 def grab_network_stats(app: Flask):
     with app.app_context():

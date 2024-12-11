@@ -13,8 +13,10 @@ from API.providers import ProviderBlueprint
 from API.providers.task import grab_providers
 from API.contracts.task import grab_contracts
 from API.contracts import ContractBlueprint
-from API.network.task import grab_network_stats, grab_nonce_counter
+from API.network.task import grab_network_stats
 from API.network import NetworkBlueprint
+from API.analytics.task import grab_nonce_counter
+from API.analytics import AnalyticsBlueprint
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.triggers.cron import CronTrigger
@@ -41,6 +43,9 @@ def create_flask_app(db, db_url=None):
     app.config.from_object(config.Config)
     db.init_app(app)
     migrate = Migrate(app, db)
+    # Ensure database tables are created (without migrations)
+    with app.app_context():
+        db.create_all()
 
     api = Api(app)
 
@@ -55,5 +60,6 @@ def create_flask_app(db, db_url=None):
     app.register_blueprint(ProviderBlueprint, url_prefix='/providers')
     app.register_blueprint(ContractBlueprint, url_prefix='/contracts')
     app.register_blueprint(NetworkBlueprint, url_prefix='/network')
+    app.register_blueprint(AnalyticsBlueprint, url_prefix='/analytics')
 
     return app

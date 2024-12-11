@@ -26,23 +26,3 @@ class Network(db.Model):
     def to_json(self):
         """Convert the model instance to a JSON string."""
         return json.dumps(self.to_dict())
-
-class Nonce(db.Model):
-    __tablename__ = 'nonce'
-
-    blockHeight = db.Column(db.Integer, primary_key=True, autoincrement=False)
-    nonceCount = db.Column(db.BigInteger, default=None)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-
-    def __init__(self, blockHeight, nonceCount=None, timestamp=None):
-        self.blockHeight = blockHeight
-        self.nonceCount = nonceCount
-        self.timestamp = timestamp or datetime.utcnow()
-
-    def to_dict(self):
-        """Convert the Nonce object to a dictionary for easy JSON serialization."""
-        return {
-            'blockHeight': self.blockHeight,
-            'nonceCount': self.nonceCount,
-            'timestamp': self.timestamp.isoformat() if self.timestamp else None
-        }
