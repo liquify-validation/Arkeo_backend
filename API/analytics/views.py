@@ -20,28 +20,28 @@ def get_total_nonce():
       - in: query
         name: offset_hours
         type: integer
-        description: Number of hours to offset from the current time. Defaults to 1.
+        description: Number of hours to look back from the current time. Defaults to 1.
       - in: query
         name: offset_days
         type: integer
-        description: Number of days to offset from the current time. Defaults to 0.
+        description: Number of days to look back from the current time. Defaults to 0.
     responses:
       200:
-        description: Total nonce count.
+        description: Total nonce count for the specified offset period.
     """
     # Get offset values from query parameters
     offset_hours = int(request.args.get('offset_hours', 1))  # Default to 1 hour
     offset_days = int(request.args.get('offset_days', 0))  # Default to 0 days
 
-    # Calculate the end time based on the offset values, aligned to the current hour
+    # Get the current time
     now = datetime.utcnow()
 
-    # Adjust end_time to the beginning of the next full hour
-    end_time = (now - timedelta(days=offset_days, hours=offset_hours)).replace(minute=0, second=0,
-                                                                               microsecond=0) + timedelta(hours=1)
+    # Round up to the next full hour for end_time
+    # if the current time is 14:22, we want to round it to 15:00
+    end_time = (now + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
 
-    # Adjust start_time to one hour before end_time (aligned to the hour)
-    start_time = end_time - timedelta(hours=1)
+    # Calculate the start_time by subtracting the offset from the end_time
+    start_time = end_time - timedelta(days=offset_days, hours=offset_hours)
 
     # Query to get the total nonce count for the specified period
     total_nonce = db.session.query(func.sum(NonceAggregate.nonce_count)).filter(
@@ -90,11 +90,15 @@ def get_chain_nonce():
 
     now = datetime.utcnow()
 
-    # Calculate the start and end time
-    # Adjust end_time to the beginning of the next full hour
-    end_time = (now - timedelta(days=offset_days, hours=offset_hours)).replace(minute=0, second=0,
-                                                                               microsecond=0) + timedelta(hours=1)
-    start_time = end_time - timedelta(hours=1)
+    # Get the current time
+    now = datetime.utcnow()
+
+    # Round up to the next full hour for end_time
+    # if the current time is 14:22, we want to round it to 15:00
+    end_time = (now + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
+
+    # Calculate the start_time by subtracting the offset from the end_time
+    start_time = end_time - timedelta(days=offset_days, hours=offset_hours)
 
     # Build the query
     query = db.session.query(
@@ -150,13 +154,15 @@ def get_provider_nonce():
     offset_days = int(request.args.get('offset_days', 0))
     provider = request.args.get('provider')
 
+    # Get the current time
     now = datetime.utcnow()
 
-    # Calculate the start and end time
-    # Adjust end_time to the beginning of the next full hour
-    end_time = (now - timedelta(days=offset_days, hours=offset_hours)).replace(minute=0, second=0,
-                                                                               microsecond=0) + timedelta(hours=1)
-    start_time = end_time - timedelta(hours=1)
+    # Round up to the next full hour for end_time
+    # if the current time is 14:22, we want to round it to 15:00
+    end_time = (now + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
+
+    # Calculate the start_time by subtracting the offset from the end_time
+    start_time = end_time - timedelta(days=offset_days, hours=offset_hours)
 
     # Build the query
     query = db.session.query(
