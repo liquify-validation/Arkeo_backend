@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 
 blp = Blueprint("analytics", __name__, description="Analytics API")
 
+
 @blp.route('/total', methods=['GET'])
 def get_total_nonce():
     """
@@ -28,22 +29,33 @@ def get_total_nonce():
       200:
         description: Total nonce count.
     """
-    offset_hours = int(request.args.get('offset_hours', 1))
-    offset_days = int(request.args.get('offset_days', 0))
+    # Get offset values from query parameters
+    offset_hours = int(request.args.get('offset_hours', 1))  # Default to 1 hour
+    offset_days = int(request.args.get('offset_days', 0))  # Default to 0 days
 
-    # Calculate the start and end time
-    end_time = datetime.utcnow() - timedelta(days=offset_days, hours=offset_hours)
+    # Calculate the end time based on the offset values, aligned to the current hour
+    now = datetime.utcnow()
+
+    # Adjust end_time to the beginning of the next full hour
+    end_time = (now - timedelta(days=offset_days, hours=offset_hours)).replace(minute=0, second=0,
+                                                                               microsecond=0) + timedelta(hours=1)
+
+    # Adjust start_time to one hour before end_time (aligned to the hour)
     start_time = end_time - timedelta(hours=1)
 
-    # Query total nonce count from NonceAggregate
+    # Query to get the total nonce count for the specified period
     total_nonce = db.session.query(func.sum(NonceAggregate.nonce_count)).filter(
         NonceAggregate.time_period == 'hourly',
         NonceAggregate.start_time >= start_time,
         NonceAggregate.end_time <= end_time
     ).scalar()
 
+    # If no data is found, ensure total_nonce is 0
+    total_nonce = total_nonce or 0
+
+    # Return the results as JSON
     return jsonify({
-        "total_nonce": total_nonce or 0,
+        "total_nonce": total_nonce,
         "start_time": start_time.isoformat(),
         "end_time": end_time.isoformat()
     })
@@ -76,8 +88,12 @@ def get_chain_nonce():
     offset_days = int(request.args.get('offset_days', 0))
     service = request.args.get('service')
 
+    now = datetime.utcnow()
+
     # Calculate the start and end time
-    end_time = datetime.utcnow() - timedelta(days=offset_days, hours=offset_hours)
+    # Adjust end_time to the beginning of the next full hour
+    end_time = (now - timedelta(days=offset_days, hours=offset_hours)).replace(minute=0, second=0,
+                                                                               microsecond=0) + timedelta(hours=1)
     start_time = end_time - timedelta(hours=1)
 
     # Build the query
@@ -134,8 +150,12 @@ def get_provider_nonce():
     offset_days = int(request.args.get('offset_days', 0))
     provider = request.args.get('provider')
 
+    now = datetime.utcnow()
+
     # Calculate the start and end time
-    end_time = datetime.utcnow() - timedelta(days=offset_days, hours=offset_hours)
+    # Adjust end_time to the beginning of the next full hour
+    end_time = (now - timedelta(days=offset_days, hours=offset_hours)).replace(minute=0, second=0,
+                                                                               microsecond=0) + timedelta(hours=1)
     start_time = end_time - timedelta(hours=1)
 
     # Build the query
