@@ -20,6 +20,7 @@ class Contract(db.Model):
     queries_per_minute = db.Column(db.Integer, default=None)
     nonce = db.Column(db.Integer, default=None)
     authorization = db.Column(db.String(45), default=None)
+    remaining = db.Column(db.Integer, default=0)
 
     def __repr__(self):
         return f"<Contract id={self.id}, provider={self.provider}, service={self.service}>"
@@ -41,6 +42,7 @@ class Contract(db.Model):
             "queries_per_minute": self.queries_per_minute,
             "nonce": self.nonce,
             "authorization": self.authorization,
+            "remaining": self.remaining,
         }
 
     def to_json(self):

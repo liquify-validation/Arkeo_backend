@@ -9,6 +9,9 @@ def store_or_update_contracts_in_db(contracts):
 
     :param contracts: List of contract dictionaries.
     """
+    status = make_query("api", "/cosmos/base/node/v1beta1/status")
+    height = status['height']
+
     for contract_data in contracts:
         try:
             # Check if a contract with the same ID already exists
@@ -27,11 +30,12 @@ def store_or_update_contracts_in_db(contracts):
                 existing_contract.paid = int(contract_data['paid']) if contract_data['paid'] else None
                 existing_contract.settlement_height = int(contract_data['settlement_height']) if contract_data[
                     'settlement_height'] else None
-                existing_contract.completed = 1 if (int(height) > int(contract_data['settlement_height'])) else 0,
+                existing_contract.completed = 1 if (int(height) > int(contract_data['settlement_height'])) else 0
                 existing_contract.queries_per_minute = int(contract_data['queries_per_minute']) if contract_data[
                     'queries_per_minute'] else None
                 existing_contract.nonce = int(contract_data['nonce']) if contract_data['nonce'] else None
                 existing_contract.authorization = contract_data.get('authorization', None)
+                existing_contract.remaining = int(contract_data['settlement_height']) - int(height) if (int(height) < int(contract_data['settlement_height'])) else 0
             else:
                 # Create a new contract if no existing entry
                 new_contract = Contract(
@@ -51,7 +55,9 @@ def store_or_update_contracts_in_db(contracts):
                     queries_per_minute=int(contract_data['queries_per_minute']) if contract_data[
                         'queries_per_minute'] else None,
                     nonce=int(contract_data['nonce']) if contract_data['nonce'] else None,
-                    authorization=contract_data.get('authorization', None)
+                    authorization=contract_data.get('authorization', None),
+                    remaining=int(contract_data['settlement_height']) - int(height) if (
+                                int(height) < int(contract_data['settlement_height'])) else 0
                 )
                 db.session.add(new_contract)
         except Exception as e:
