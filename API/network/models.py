@@ -23,6 +23,8 @@ class Network(db.Model):
             "bond": self.bond,
             "number_of_providers": self.number_of_providers,
             "number_of_services": self.number_of_services,
+            "height": self.height,
+            "blockTime": self.blockTime,
         }
 
     def to_json(self):
