@@ -15,7 +15,7 @@ class Network(db.Model):
     blockTime = db.Column(db.Float, default=None)
 
     def __repr__(self):
-        return f"<Network id={self.id}, bond={self.bond}, number_of_providers={self.number_of_providers}, number_of_services={self.number_of_services}>"
+        return f"<Network id={self.id}, bond={self.bond}, number_of_providers={self.number_of_providers}, number_of_services={self.number_of_services}, height={self.height}, blockTime={self.blockTime}>"
 
     def to_dict(self):
         return {
