@@ -5,6 +5,46 @@ from flask import jsonify, request
 from common.common import *
 blp = Blueprint("network", __name__, description="Network API")
 
+@blp.route('/block-time')
+def providers():
+    """
+    Return the average blocktime sampled over the last 100 blocks
+    ---
+    tags:
+      - Network
+    responses:
+      200:
+        description: avg blocktime in seconds.
+    """
+    # Query all providers using SQLAlchemy
+    services = Network.query.with_entities(Network.blockTime).all()
+
+    # Extract bond values into a list
+    service_values = [service[0] for service in services]  # Each bond is a tuple
+
+    # Return the data as a JSON response
+    return jsonify(service_values)
+
+@blp.route('/height')
+def providers():
+    """
+    Return the height our indexer is at
+    ---
+    tags:
+      - Network
+    responses:
+      200:
+        description: current indexer height
+    """
+    # Query all providers using SQLAlchemy
+    services = Network.query.with_entities(Network.height).all()
+
+    # Extract bond values into a list
+    service_values = [service[0] for service in services]  # Each bond is a tuple
+
+    # Return the data as a JSON response
+    return jsonify(service_values)
+
 @blp.route('/cahin-id-decode')
 def get_chain_reverse_lookup():
     """

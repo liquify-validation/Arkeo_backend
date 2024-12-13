@@ -11,6 +11,8 @@ class Network(db.Model):
     number_of_providers = db.Column(db.Integer, default=None)
     number_of_services = db.Column(db.Integer, default=None)
     number_of_contracts = db.Column(db.Integer, default=None)
+    height = db.Column(db.Integer, default=None)
+    blockTime = db.Column(db.Float, default=None)
 
     def __repr__(self):
         return f"<Network id={self.id}, bond={self.bond}, number_of_providers={self.number_of_providers}, number_of_services={self.number_of_services}>"
