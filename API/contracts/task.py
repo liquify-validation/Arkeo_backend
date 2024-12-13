@@ -27,7 +27,7 @@ def store_or_update_contracts_in_db(contracts):
                 existing_contract.paid = int(contract_data['paid']) if contract_data['paid'] else None
                 existing_contract.settlement_height = int(contract_data['settlement_height']) if contract_data[
                     'settlement_height'] else None
-                existing_contract.completed = None  # Assuming completed status isn't provided
+                existing_contract.completed = 1 if (int(height) > int(contract_data['settlement_height'])) else 0,
                 existing_contract.queries_per_minute = int(contract_data['queries_per_minute']) if contract_data[
                     'queries_per_minute'] else None
                 existing_contract.nonce = int(contract_data['nonce']) if contract_data['nonce'] else None
@@ -47,7 +47,7 @@ def store_or_update_contracts_in_db(contracts):
                     paid=int(contract_data['paid']) if contract_data['paid'] else None,
                     settlement_height=int(contract_data['settlement_height']) if contract_data[
                         'settlement_height'] else None,
-                    completed=None,  # Assuming completed status isn't provided
+                    completed=1 if (int(height) > int(contract_data['settlement_height'])) else 0,
                     queries_per_minute=int(contract_data['queries_per_minute']) if contract_data[
                         'queries_per_minute'] else None,
                     nonce=int(contract_data['nonce']) if contract_data['nonce'] else None,
