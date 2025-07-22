@@ -165,3 +165,37 @@ def providers():
 
     # Return the data as a JSON response
     return jsonify(network_data)
+    
+@blp.route('/number-of-services-per-chain')
+def get_service_counts():
+    """
+        Grab a JSON of the number of services per chain
+        ---
+        tags:
+          - Network
+        responses:
+          200:
+            description: A JSON of number of services per chain
+    """
+    service_counts = defaultdict(int)
+
+    providers = Provider.query.all()
+
+    for provider in providers:
+        if provider.services:
+            service_ids = provider.services.split(',')
+            for service_id in service_ids:
+                service_id = service_id.strip()
+                if service_id.isdigit():
+                    service_counts[int(service_id)] += 1
+
+    # Build dict indexed by chain id
+    result = {
+        service_id: {
+            "name": ServiceReverseLookup.get(service_id, "unknown"),
+            "count": count
+        }
+        for service_id, count in sorted(service_counts.items())
+    }
+
+    return jsonify(result)
