@@ -44,6 +44,8 @@ def create_flask_app(db, db_url=None):
     db.init_app(app)
     migrate = Migrate(app, db)
     # Ensure database tables are created (without migrations)
+
+    app.config['SQLALCHEMY_ECHO'] = True
     with app.app_context():
         db.create_all()
 
@@ -52,10 +54,10 @@ def create_flask_app(db, db_url=None):
     with app.app_context():
         scheduler = BackgroundScheduler()
         scheduler.start()
-        scheduler.add_job(func=grab_providers, trigger=IntervalTrigger(minutes=5), args=[app])
-        scheduler.add_job(func=grab_contracts, trigger=IntervalTrigger(minutes=1), args=[app])
-        scheduler.add_job(func=grab_network_stats, trigger=IntervalTrigger(minutes=1), args=[app])
-        scheduler.add_job(func=grab_nonce_counter, trigger=CronTrigger(minute=0), args=[app])
+        #scheduler.add_job(func=grab_providers, trigger=IntervalTrigger(minutes=1), args=[app])
+        #scheduler.add_job(func=grab_contracts, trigger=IntervalTrigger(minutes=1), args=[app])
+        #scheduler.add_job(func=grab_network_stats, trigger=IntervalTrigger(minutes=1), args=[app])
+        scheduler.add_job(func=grab_nonce_counter, trigger=IntervalTrigger(minutes=1), args=[app])
 
     app.register_blueprint(ProviderBlueprint, url_prefix='/providers')
     app.register_blueprint(ContractBlueprint, url_prefix='/contracts')

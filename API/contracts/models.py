@@ -21,6 +21,7 @@ class Contract(db.Model):
     nonce = db.Column(db.Integer, default=None)
     authorization = db.Column(db.String(45), default=None)
     remaining = db.Column(db.Integer, default=0)
+    provider_name = db.Column(db.String(100), nullable=False)
 
     def __repr__(self):
         return f"<Contract id={self.id}, provider={self.provider}, service={self.service}>"
@@ -43,6 +44,7 @@ class Contract(db.Model):
             "nonce": self.nonce,
             "authorization": self.authorization,
             "remaining": self.remaining,
+            "provider_name": self.provider_name
         }
 
     def to_json(self):

@@ -1,4 +1,5 @@
 from API.contracts.models import Contract
+from API.providers.models import Provider
 from DB import db
 from common.common import *
 from flask import Flask
@@ -16,6 +17,11 @@ def store_or_update_contracts_in_db(contracts):
         try:
             # Check if a contract with the same ID already exists
             existing_contract = Contract.query.get(int(contract_data['id']))
+            provider = Provider.query.filter_by(provider_pubkey=contract_data['provider']).first()
+            if provider is not None:
+                provider_name = provider.provider_name
+            else:
+                provider_name = ""
 
             if existing_contract:
                 # Update existing contract
@@ -30,12 +36,13 @@ def store_or_update_contracts_in_db(contracts):
                 existing_contract.paid = int(contract_data['paid']) if contract_data['paid'] else None
                 existing_contract.settlement_height = int(contract_data['settlement_height']) if contract_data[
                     'settlement_height'] else None
-                existing_contract.completed = 1 if (int(height) > int(contract_data['settlement_height'])) else 0
+                existing_contract.completed = 1 if (int(height) > int(contract_data['settlement_height'])) else 0  # Assuming completed status isn't provided
                 existing_contract.queries_per_minute = int(contract_data['queries_per_minute']) if contract_data[
                     'queries_per_minute'] else None
                 existing_contract.nonce = int(contract_data['nonce']) if contract_data['nonce'] else None
                 existing_contract.authorization = contract_data.get('authorization', None)
                 existing_contract.remaining = int(contract_data['settlement_height']) - int(height) if (int(height) < int(contract_data['settlement_height'])) else 0
+                existing_contract.provider_name = provider_name
             else:
                 # Create a new contract if no existing entry
                 new_contract = Contract(
@@ -51,13 +58,14 @@ def store_or_update_contracts_in_db(contracts):
                     paid=int(contract_data['paid']) if contract_data['paid'] else None,
                     settlement_height=int(contract_data['settlement_height']) if contract_data[
                         'settlement_height'] else None,
-                    completed=1 if (int(height) > int(contract_data['settlement_height'])) else 0,
+                    completed=1 if (int(height) > int(contract_data['settlement_height'])) else 0,  # Assuming completed status isn't provided
                     queries_per_minute=int(contract_data['queries_per_minute']) if contract_data[
                         'queries_per_minute'] else None,
                     nonce=int(contract_data['nonce']) if contract_data['nonce'] else None,
                     authorization=contract_data.get('authorization', None),
                     remaining=int(contract_data['settlement_height']) - int(height) if (
-                                int(height) < int(contract_data['settlement_height'])) else 0
+                                int(height) < int(contract_data['settlement_height'])) else 0,
+                    provider_name=provider_name
                 )
                 db.session.add(new_contract)
         except Exception as e:

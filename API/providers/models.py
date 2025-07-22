@@ -19,7 +19,7 @@ class Provider(db.Model):
     isp = db.Column(db.String(128), nullable=True)
     isp_country = db.Column(db.String(128), nullable=True)
     ip_addr = db.Column(db.String(48), nullable=True)
-    id = db.Column(db.Integer, unique=True, nullable=False, autoincrement=True)
+    id = db.Column(db.Integer, unique=True, autoincrement=True)
 
     def __repr__(self):
         return f"<Provider(provider_name='{self.provider_name}', number_of_services={self.number_of_services})>"
