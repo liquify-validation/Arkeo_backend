@@ -3,6 +3,8 @@ from sqlalchemy import func
 from API.network.models import Network
 from flask import jsonify, request
 from common.common import *
+from collections import defaultdict
+from API.providers.models import Provider
 blp = Blueprint("network", __name__, description="Network API")
 
 @blp.route('/block-time')
@@ -165,7 +167,7 @@ def providers():
 
     # Return the data as a JSON response
     return jsonify(network_data)
-    
+
 @blp.route('/number-of-services-per-chain')
 def get_service_counts():
     """

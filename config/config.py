@@ -11,15 +11,12 @@ class Config:
     DB_PORT = os.getenv('DATABASE_PORT')
     DB_NAME = os.getenv('DATABASE_NAME')
     FRONTEND_URL = os.getenv('FRONTEND_URL')
-    MAILGUN_API = os.getenv('MAILGUN_API_KEY')
-    EMAIL_FROM = os.getenv('EMAIL_FROM')
-    MIDGARD_URL = 'https://midgard.ninerealms.com' #os.getenv('MIDGARD_URL')
 
     encoded_username = quote_plus(DB_USERNAME)
     encoded_password = quote_plus(DB_PASSWORD)
 
     PROPOGATE_EXCEPTIONS = True
-    API_TITLE = "Thorchain liquify Auth"
+    API_TITLE = "Arkeo dashboard API"
     API_VERSION = "v1"
     OPENAPI_VERSION = "3.0.3"
     OPENAPI_URL_PREFIX = "/"
