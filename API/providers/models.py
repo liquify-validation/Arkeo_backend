@@ -20,6 +20,7 @@ class Provider(db.Model):
     isp_country = db.Column(db.String(128), nullable=True)
     ip_addr = db.Column(db.String(48), nullable=True)
     id = db.Column(db.Integer, unique=True, autoincrement=True)
+    status = db.Column(db.String(45), nullable=True)
 
     def __repr__(self):
         return f"<Provider(provider_name='{self.provider_name}', number_of_services={self.number_of_services})>"
@@ -42,6 +43,7 @@ class Provider(db.Model):
             "isp": self.isp,
             "isp_country": self.isp_country,
             "ip_addr": self.ip_addr,
+            "status": self.status,
         }
 
     def to_json(self):

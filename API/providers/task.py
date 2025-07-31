@@ -62,7 +62,8 @@ def grab_provider(provider):
         "offline_reason": "N/A",
         "isp": ip_dict,
         "provider_name": provider_name,
-        "provider_pubkey": provider[0]['pub_key']
+        "provider_pubkey": provider[0]['pub_key'],
+        "status": "ONLINE"
     }
 
     # Try to fetch metadata from the provider's metadata_uri
@@ -81,6 +82,7 @@ def grab_provider(provider):
     except requests.exceptions.RequestException:
         provider_data["meta_data_accessible"] = 0
         provider_data["offline_reason"] = "Metadata not accessible"
+        provider_data["status"] = "OFFLINE"
         print("Timeout error: The request timed out.")
 
     # Check if provider already exists in the database
@@ -103,6 +105,7 @@ def grab_provider(provider):
         existing_provider.isp_country = ip_dict.get('country', 'UNKNOWN')
         existing_provider.ip_addr = ip_dict.get('query', 'UNKNOWN')
         existing_provider.provider_name = provider_data["provider_name"]
+        existing_provider.status = provider_data["status"]
 
         print(f"Provider {provider_name} updated successfully.")
     else:
@@ -122,7 +125,8 @@ def grab_provider(provider):
             offline_reason=provider_data["offline_reason"],
             isp=ip_dict.get('isp', 'UNKNOWN'),
             isp_country=ip_dict.get('country', 'UNKNOWN'),
-            ip_addr=ip_dict.get('query', 'UNKNOWN')
+            ip_addr=ip_dict.get('query', 'UNKNOWN'),
+            status=provider_data["status"]
         )
         db.session.add(new_provider)
         print(f"Provider {provider_name} added successfully.")
