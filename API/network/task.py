@@ -37,23 +37,34 @@ def grab_network_stats(app: Flask):
         num_providers = len(providers_from_db)
 
         # Extract all services from providers
-        chains = []
+        chains = []  # This will hold all services
+        unique_services = set()  # To track unique services
+        total_services = 0  # To count total services
+
         for provider in providers_from_db:
             services = provider.services
             if services:
                 try:
-                    # Try to parse services as JSON
                     parsed_services = json.loads(services)
                     if isinstance(parsed_services, list):
                         chains.extend(parsed_services)
+                        total_services += len(parsed_services)
+                        unique_services.update(parsed_services)
                     else:
-                        # If parsed result is not a list, treat it as a single service
                         chains.append(parsed_services)
+                        total_services += 1
+                        unique_services.add(parsed_services)
                 except (ValueError, TypeError):
-                    # If JSON parsing fails, treat it as a single service string
-                    chains.append(services)
+                    # Fall back to comma-separated parsing
+                    split_services = [s.strip() for s in services.split(',') if s.strip()]
+                    chains.extend(split_services)
+                    total_services += len(split_services)
+                    unique_services.update(split_services)
 
-        num_services = len(chains)
+        print("Total services:", total_services)
+        print("Unique services:", len(unique_services))
+
+        num_services = total_services
 
         # Check if an entry exists in the Network table
         network_entry = Network.query.first()
@@ -64,6 +75,7 @@ def grab_network_stats(app: Flask):
             network_entry.number_of_providers = num_providers
             network_entry.number_of_services = num_services
             network_entry.number_of_contracts = number_of_contracts
+            network_entry.number_of_chains = len(unique_services)
             network_entry.height = times["height"]
             network_entry.blockTime = times["avgBlockTime"]
         else:
@@ -73,6 +85,7 @@ def grab_network_stats(app: Flask):
                 number_of_providers=num_providers,
                 number_of_services=num_services,
                 number_of_contracts=number_of_contracts,
+                number_of_chains=len(unique_services),
                 height=times["height"],
                 blockTime=times["avgBlockTime"]
             )
