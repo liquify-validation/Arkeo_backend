@@ -47,16 +47,18 @@ def grab_network_stats(app: Flask):
                 try:
                     parsed_services = json.loads(services)
                     if isinstance(parsed_services, list):
-                        chains.extend(parsed_services)
-                        total_services += len(parsed_services)
-                        unique_services.update(parsed_services)
+                        normalized = [int(s) for s in parsed_services]
+                        chains.extend(normalized)
+                        total_services += len(normalized)
+                        unique_services.update(normalized)
                     else:
-                        chains.append(parsed_services)
+                        val = int(parsed_services)
+                        chains.append(val)
                         total_services += 1
-                        unique_services.add(parsed_services)
-                except (ValueError, TypeError):
-                    # Fall back to comma-separated parsing
-                    split_services = [s.strip() for s in services.split(',') if s.strip()]
+                        unique_services.add(val)
+                except (ValueError, TypeError, json.JSONDecodeError):
+                    # Fall back to comma-separated string
+                    split_services = [int(s.strip()) for s in services.split(',') if s.strip().isdigit()]
                     chains.extend(split_services)
                     total_services += len(split_services)
                     unique_services.update(split_services)
