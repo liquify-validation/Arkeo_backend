@@ -10,6 +10,7 @@ from API.providers.models import Provider
 from DB import db
 from common.common import *
 from flask import current_app, Flask
+from urllib.parse import urlparse
 
 def grab_provider(provider):
     provider_name = extract_main_domain(provider[0]["metadata_uri"])
@@ -86,7 +87,7 @@ def grab_provider(provider):
         print("Timeout error: The request timed out.")
 
     # Check if provider already exists in the database
-    existing_provider = Provider.query.filter_by(ip_addr=ip_addr).first()
+    existing_provider = Provider.query.filter_by(provider_pubkey=provider_data['provider_pubkey']).first()
 
     if existing_provider:
         # Update existing fields
@@ -140,6 +141,11 @@ def grab_provider(provider):
 
     return provider_data
 
+# Function to normalize the URL (strip http or https)
+def normalize_url(url):
+    parsed_url = urlparse(url)
+    return parsed_url.netloc + parsed_url.path
+
 def grab_providers(app: Flask):
     with app.app_context():
         # Your code to update the database
@@ -150,9 +156,13 @@ def grab_providers(app: Flask):
         # Iterate over the original dictionary
         for item in providers:
             metadata_name = item["metadata_uri"]
-            if metadata_name not in indexed_by_provider:
-                indexed_by_provider[metadata_name] = []
-            indexed_by_provider[metadata_name].append(item)
+
+            # Normalize the URL (strip the protocol)
+            normalized_metadata_name = normalize_url(metadata_name)
+
+            if normalized_metadata_name not in indexed_by_provider:
+                indexed_by_provider[normalized_metadata_name] = []
+            indexed_by_provider[normalized_metadata_name].append(item)
 
         provider_data = {}
 
